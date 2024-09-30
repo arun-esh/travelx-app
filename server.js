@@ -12,7 +12,11 @@ mongoose
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-  .then(() => console.log("DB connection successful!"));
+  .then(() => console.log("DB connection successful!"))
+  .catch((err) => {
+    console.error("DB connection error:", err);
+    process.exit(1); // Exit the process if the DB connection fails
+  });
 
 const port = process.env.PORT || 7473;
 const server = app.listen(port, () => {
