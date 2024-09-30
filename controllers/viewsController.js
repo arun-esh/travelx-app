@@ -1,10 +1,45 @@
 const Product = require(`./../models/productModel`);
 const catchAsync = require(`./../utils/catchAsync`);
+const axios = require("axios");
+
+// exports.getOverview = catchAsync(async (req, res) => {
+//   const products = await Product.find();
+//   res.render("overview", {
+//     products,
+//   });
+// });
 
 exports.getOverview = catchAsync(async (req, res) => {
   const products = await Product.find();
-  res.render('overview', {
-    products,
+
+  const filteredProducts = await Promise.all(
+    products.map(async (product) => {
+      const imageUrl = product.images.picture_url; // Access the picture_url property correctly
+
+      if (typeof imageUrl !== "string") {
+        console.log(`Product ${product.id} does not have a valid image URL.`);
+        return null; // Handle case where picture_url is not a string
+      }
+
+      try {
+        const response = await axios.head(imageUrl); // Make HEAD request
+        if (response.status === 200) {
+          return product; // Return the product if the image status is 200
+        }
+      } catch (error) {
+        console.log(
+          `Error checking image for product ${product.id}: ${error.message}`
+        );
+      }
+      return null; // Return null for products with image issues
+    })
+  );
+
+  // Filter out null values
+  const validProducts = filteredProducts.filter((product) => product !== null);
+
+  res.render("overview", {
+    products: validProducts,
   });
 });
 
@@ -64,32 +99,32 @@ exports.getOverview = catchAsync(async (req, res) => {
 
 exports.getProduct = catchAsync(async (req, res, next) => {
   const product = await Product.findOne({ _id: req.params.slug });
-  res.status(200).render('product', {
-    title: 'Product',
+  res.status(200).render("product", {
+    title: "Product",
     product,
   });
 });
 
 exports.getLoginForm = (req, res) => {
-  res.status(200).render('login', {
-    title: 'Log into your account',
+  res.status(200).render("login", {
+    title: "Log into your account",
   });
 };
 
 exports.getSignUpForm = (req, res) => {
-  res.status(200).render('signup', {
-    title: 'Log into your account',
+  res.status(200).render("signup", {
+    title: "Log into your account",
   });
 };
 
 exports.getBillingPage = (req, res) => {
-  res.status(200).render('billing', {
-    title: 'Billing',
+  res.status(200).render("billing", {
+    title: "Billing",
   });
 };
 
 exports.getPrivacy = catchAsync(async (req, res, next) => {
-  res.status(200).render('privacy', {
-    title: 'Privacy',
+  res.status(200).render("privacy", {
+    title: "Privacy",
   });
 });
